@@ -220,19 +220,24 @@ export async function markOrderStatus(input: {
 /** Owner-panel diagnostics: can this host actually read the saved keys? */
 export async function serverAccessDiagnostics() {
   const mode = serverMode();
+  const envRazorpay = !!env("RAZORPAY_KEY_ID") && !!env("RAZORPAY_KEY_SECRET");
+  const envWebhook = !!env("RAZORPAY_WEBHOOK_SECRET");
   const out = {
     mode,
     hasServiceRole: mode === "service_role",
     hasToken: !!serverAccessToken(),
     canReadKeys: false,
-    hasRazorpay: false,
-    hasWebhookSecret: false,
+    hasRazorpay: envRazorpay,
+    hasWebhookSecret: envWebhook,
     hasBuiltInAi: !!env("LOVABLE_API_KEY"),
     hasOwnerAiKey: false,
     message: "",
   };
   if (mode === "none") {
-    out.message = SERVER_SETUP_MESSAGE;
+    out.canReadKeys = envRazorpay;
+    out.message = envRazorpay
+      ? "Razorpay keys are set as host secrets, so checkout works. Database-stored keys are not readable on this host."
+      : SERVER_SETUP_MESSAGE;
     return out;
   }
   try {
@@ -243,12 +248,17 @@ export async function serverAccessDiagnostics() {
       "ai_api_key",
     ]);
     out.canReadKeys = true;
-    out.hasRazorpay = !!map.get("razorpay_key_id")?.trim() && !!map.get("razorpay_key_secret")?.trim();
-    out.hasWebhookSecret = !!map.get("razorpay_webhook_secret")?.trim();
+    out.hasRazorpay = envRazorpay || (!!map.get("razorpay_key_id")?.trim() && !!map.get("razorpay_key_secret")?.trim());
+    out.hasWebhookSecret = envWebhook || !!map.get("razorpay_webhook_secret")?.trim();
     out.hasOwnerAiKey = !!map.get("ai_api_key")?.trim();
     out.message = out.hasRazorpay ? "Server can read the saved keys." : "Server is linked, but Razorpay keys are empty.";
   } catch (e) {
-    out.message = e instanceof Error ? e.message : SERVER_SETUP_MESSAGE;
+    out.canReadKeys = envRazorpay;
+    out.message = envRazorpay
+      ? "Razorpay keys are set as host secrets, so checkout works."
+      : e instanceof Error
+        ? e.message
+        : SERVER_SETUP_MESSAGE;
   }
   return out;
 }
