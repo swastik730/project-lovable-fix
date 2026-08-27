@@ -147,3 +147,30 @@ the Keys tab shows which mode the saved keys are in.
 3. `/tutor` → ask one question, expect an answer.
 4. `/subscribe` → start a checkout with Razorpay test keys and pay with a test
    card; the plan should turn active on `/profile`.
+
+---
+
+## Final Cloudflare checklist (verified 27 Aug 2026)
+
+Set these in Workers → Settings → Variables and Secrets. Use the exact same
+Supabase project everywhere (`ctbztladyklnuiifdlcs`):
+
+| Variable | Type | Value |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | build var | https://ctbztladyklnuiifdlcs.supabase.co |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | build var | publishable key |
+| `VITE_SUPABASE_PROJECT_ID` | build var | ctbztladyklnuiifdlcs |
+| `SUPABASE_URL` | var | same as VITE_SUPABASE_URL |
+| `SUPABASE_PUBLISHABLE_KEY` | var | same as VITE_SUPABASE_PUBLISHABLE_KEY |
+| `SUPABASE_SERVICE_ROLE_KEY` | secret | service role key (alias `APP_SUPABASE_SERVICE_ROLE_KEY` also works) |
+| `RAZORPAY_KEY_ID` | secret | live key id |
+| `RAZORPAY_KEY_SECRET` | secret | live key secret |
+| `RAZORPAY_WEBHOOK_SECRET` | secret | same value pasted in Razorpay → Webhooks |
+
+With the service-role key present the Owner Panel → Keys page shows
+**"Server can read the saved keys." / Access mode: service_role**, and the keys
+saved in the panel are used automatically. The `RAZORPAY_*` host secrets simply
+override them, so payments keep working even if the database keys are cleared.
+
+Razorpay webhook URL: `https://<your-domain>/api/public/razorpay-webhook`
+(events: payment.captured, order.paid, payment.failed, refund.processed).
