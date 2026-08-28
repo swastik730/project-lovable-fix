@@ -78,8 +78,8 @@ function QuizPage() {
     // seed 0 = server render → stable order, no hydration mismatch.
     const built =
       seedRef.current === 0
-        ? seededShuffle(filtered, 1).slice(0, 10)
-        : pickFresh(filtered, 10, seenRef.current, seedRef.current);
+        ? pickHard(seededShuffle(filtered, 1), HARD.quizQuestions, 1)
+        : pickHard(filtered, HARD.quizQuestions, seedRef.current, seenRef.current);
 
     setPaper({ key: runKey, questions: built });
     // eslint-disable-next-line react-hooks/exhaustive-deps
