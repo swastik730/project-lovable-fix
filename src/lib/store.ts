@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import type { Difficulty } from "./curriculum";
+import { HARD } from "./difficulty";
 import { normalizeAvatarUrl } from "./avatars";
 
 export type Attempt = {
