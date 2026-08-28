@@ -9,6 +9,7 @@ import { SolutionCard } from "@/components/exam/SolutionCard";
 import type { Question } from "@/lib/curriculum";
 import { dedupeQuestions, filterPool, useQuestionPool, useShuffleSeed } from "@/lib/questions";
 import { findTest, pickFresh, questionsForTest } from "@/lib/testEngine";
+import { HARD, gradeBand, netPercent, netScore } from "@/lib/difficulty";
 import { clearProgress, loadProgress, saveProgress, type RunProgress } from "@/lib/testProgress";
 import { recordAttempt, toggleBookmark, useAppState, useSeenQuestionIds } from "@/lib/store";
 
@@ -306,7 +307,10 @@ function Runner({
   }, [submitted]);
 
   if (submitted) {
-    const pct = Math.round((correctCount / questions.length) * 100);
+    const wrongCount = attempted - correctCount;
+    const pct = netPercent(correctCount, wrongCount, questions.length);
+    const marks = netScore(correctCount, wrongCount);
+    const band = gradeBand(pct);
     const spent = search.minutes * 60 - left;
     const avg = Math.round(spent / questions.length);
     return (
@@ -316,12 +320,13 @@ function Runner({
             <Trophy className="h-8 w-8" />
           </span>
           <h2 className="mt-3 text-2xl font-extrabold">
-            {pct >= 80 ? "Excellent! 🎉" : pct >= 50 ? "Great Work! 🎯" : "Keep Practising 💪"}
+            {band.label}
           </h2>
           <p className="text-xs opacity-90">{search.title}</p>
           <p className="mt-4 text-5xl font-extrabold tabular-nums">{pct}%</p>
           <p className="text-xs font-semibold opacity-90">
-            {correctCount} out of {questions.length} correct
+            {marks.toFixed(2)} / {questions.length} marks · {correctCount} correct ·{" "}
+            {wrongCount} wrong (−{HARD.negativeMark} each)
           </p>
         </div>
 
@@ -331,7 +336,7 @@ function Runner({
             <p className="text-[11px] font-semibold text-muted-foreground">Correct</p>
           </div>
           <div className="surface p-3">
-            <p className="text-xl font-extrabold text-destructive">{attempted - correctCount}</p>
+            <p className="text-xl font-extrabold text-destructive">{wrongCount}</p>
             <p className="text-[11px] font-semibold text-muted-foreground">Incorrect</p>
           </div>
           <div className="surface p-3">
