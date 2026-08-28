@@ -7,7 +7,7 @@ import { ExamRunner } from "@/components/exam/ExamRunner";
 import { SolutionCard } from "@/components/exam/SolutionCard";
 import { getSubject, type Question } from "@/lib/curriculum";
 import { filterPool, seededShuffle, useQuestionPool, useShuffleSeed } from "@/lib/questions";
-import { pickFresh } from "@/lib/testEngine";
+import { HARD, netPercent, pickHard } from "@/lib/difficulty";
 import { recordAttempt, toggleBookmark, useAppState, useSeenQuestionIds } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -316,7 +316,7 @@ function ResultView({
     (q) => answers[q.id] !== undefined && answers[q.id] !== q.answer,
   ).length;
   const skipped = questions.length - correct - wrong;
-  const accuracy = Math.round((correct / questions.length) * 100);
+  const accuracy = netPercent(correct, wrong, questions.length);
 
   return (
     <AppShell title="Result">
