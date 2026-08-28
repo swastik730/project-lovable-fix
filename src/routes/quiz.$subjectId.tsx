@@ -7,7 +7,7 @@ import { ExamRunner } from "@/components/exam/ExamRunner";
 import { SolutionCard } from "@/components/exam/SolutionCard";
 import { getSubject, type Question } from "@/lib/curriculum";
 import { filterPool, seededShuffle, useQuestionPool, useShuffleSeed } from "@/lib/questions";
-import { pickFresh } from "@/lib/testEngine";
+import { HARD, netPercent, pickHard } from "@/lib/difficulty";
 import { recordAttempt, toggleBookmark, useAppState, useSeenQuestionIds } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -78,8 +78,8 @@ function QuizPage() {
     // seed 0 = server render → stable order, no hydration mismatch.
     const built =
       seedRef.current === 0
-        ? seededShuffle(filtered, 1).slice(0, 10)
-        : pickFresh(filtered, 10, seenRef.current, seedRef.current);
+        ? pickHard(seededShuffle(filtered, 1), HARD.quizQuestions, 1)
+        : pickHard(filtered, HARD.quizQuestions, seedRef.current, seenRef.current);
 
     setPaper({ key: runKey, questions: built });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,6 +194,11 @@ function QuizRunner({
   const [finished, setFinished] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
+  // Hard mode: the quiz is timed. Running out of time submits automatically.
+  const limit = questions.length * HARD.quizSecondsPerQuestion;
+  const left = Math.max(0, limit - seconds);
+  const submitRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     if (finished) return;
     const t = setInterval(() => {
@@ -203,6 +208,10 @@ function QuizRunner({
     }, 1000);
     return () => clearInterval(t);
   }, [finished, index, questions]);
+
+  useEffect(() => {
+    if (!finished && seconds >= limit) submitRef.current();
+  }, [seconds, limit, finished]);
 
   const submit = () => {
     recordAttempt({
@@ -231,6 +240,7 @@ function QuizRunner({
     }
     setFinished(true);
   };
+  submitRef.current = submit;
 
   if (finished) {
     return (
@@ -265,7 +275,8 @@ function QuizRunner({
         answers={answers}
         marked={marked}
         bookmarks={state.bookmarks}
-        timerLabel={formatTime(seconds)}
+        timerLabel={formatTime(left)}
+        timeLow={left <= 60}
         submitLabel="Submit quiz"
         onIndexChange={setIndex}
         onSelect={(i) => setAnswers((a) => ({ ...a, [q.id]: i }))}
@@ -305,7 +316,7 @@ function ResultView({
     (q) => answers[q.id] !== undefined && answers[q.id] !== q.answer,
   ).length;
   const skipped = questions.length - correct - wrong;
-  const accuracy = Math.round((correct / questions.length) * 100);
+  const accuracy = netPercent(correct, wrong, questions.length);
 
   return (
     <AppShell title="Result">

@@ -12,15 +12,15 @@ import type { Question } from "./curriculum";
 import { seededShuffle } from "./questions";
 
 export const BOARD_PATTERN = [
-  { section: "A", count: 20, marks: 1, difficulty: "easy" },
-  { section: "B", count: 10, marks: 2, difficulty: "medium" },
-  { section: "C", count: 8, marks: 3, difficulty: "medium" },
+  { section: "A", count: 20, marks: 1, difficulty: "medium" },
+  { section: "B", count: 10, marks: 2, difficulty: "hard" },
+  { section: "C", count: 8, marks: 3, difficulty: "hard" },
   { section: "D", count: 4, marks: 4, difficulty: "hard" },
 ] as const;
 
 export const BOARD_TOTAL_QUESTIONS = BOARD_PATTERN.reduce((n, s) => n + s.count, 0);
 export const BOARD_TOTAL_MARKS = BOARD_PATTERN.reduce((n, s) => n + s.count * s.marks, 0);
-export const BOARD_MINUTES = 180;
+export const BOARD_MINUTES = 150;
 
 /** URL-safe marks pattern, e.g. "20x1,10x2,8x3,4x4" — parsed back by expandMarks. */
 export const BOARD_MARKS_PATTERN = BOARD_PATTERN.map((s) => `${s.count}x${s.marks}`).join(",");

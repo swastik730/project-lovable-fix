@@ -1,6 +1,7 @@
 import type { Question } from "./curriculum";
 import { SUBJECTS } from "./curriculum";
 import { seededShuffle } from "./questions";
+import { HARD } from "./difficulty";
 
 export type SeriesTest = {
   id: string;
@@ -15,8 +16,8 @@ export type SeriesTest = {
 /** Fixed seed → SSR and client build exactly the same series (no hydration mismatch). */
 const SERIES_SEED = 20260820;
 
-const SUBJECT_TEST_SIZE = 15;
-const FULL_TEST_SIZE = 30;
+const SUBJECT_TEST_SIZE = 20;
+const FULL_TEST_SIZE = 40;
 /** How much of a subject's bank may be consumed by subject-only tests. */
 const SUBJECT_SHARE = 0.6;
 
@@ -45,10 +46,10 @@ export function buildSeries(pool: Question[]): SeriesTest[] {
       subjectTests.push({
         id: `t-${subject.id}-${n + 1}`,
         title: `${subject.name} Test ${n + 1}`,
-        subtitle: `${subject.short} · chapter mix`,
+        subtitle: `${subject.short} · hard chapter mix`,
         subjectId: subject.id,
         difficulty: "mixed",
-        minutes: SUBJECT_TEST_SIZE,
+        minutes: Math.ceil((SUBJECT_TEST_SIZE * HARD.testSecondsPerQuestion) / 60),
         questionIds: slice.map((q) => q.id),
       });
     }
@@ -63,10 +64,10 @@ export function buildSeries(pool: Question[]): SeriesTest[] {
     fullTests.push({
       id: `t-full-${n + 1}`,
       title: `Full Syllabus Mock Test ${n + 1}`,
-      subtitle: "All subjects · board pattern",
+      subtitle: "All subjects · tougher than board pattern",
       subjectId: null,
       difficulty: "mixed",
-      minutes: FULL_TEST_SIZE,
+      minutes: Math.ceil((FULL_TEST_SIZE * HARD.testSecondsPerQuestion) / 60),
       questionIds: slice.map((q) => q.id),
     });
   }

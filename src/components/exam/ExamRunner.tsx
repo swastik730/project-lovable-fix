@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ExamQuestionCard } from "@/components/exam/QuestionCard";
 import type { Question } from "@/lib/curriculum";
 import { getSubject } from "@/lib/curriculum";
+import { MARKING_LABEL } from "@/lib/difficulty";
 import { cn } from "@/lib/utils";
 
 export type ExamRunnerProps = {
@@ -127,8 +128,8 @@ export function ExamRunner({
           <span className="min-w-0 truncate rounded-lg border border-primary/25 bg-primary-soft px-2.5 py-1 text-[12px] font-bold text-primary">
             {subjectLabel}
           </span>
-          <span className="shrink-0 rounded-lg border border-success/30 bg-success-soft px-2 py-1 text-[11.5px] font-bold text-success">
-            1 mark · No negative
+          <span className="shrink-0 rounded-lg border border-destructive/30 bg-destructive-soft px-2 py-1 text-[11.5px] font-bold text-destructive">
+            {MARKING_LABEL}
           </span>
 
           <span
