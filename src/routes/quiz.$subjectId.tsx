@@ -194,6 +194,11 @@ function QuizRunner({
   const [finished, setFinished] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
+  // Hard mode: the quiz is timed. Running out of time submits automatically.
+  const limit = questions.length * HARD.quizSecondsPerQuestion;
+  const left = Math.max(0, limit - seconds);
+  const submitRef = useRef<() => void>(() => {});
+
   useEffect(() => {
     if (finished) return;
     const t = setInterval(() => {
@@ -203,6 +208,10 @@ function QuizRunner({
     }, 1000);
     return () => clearInterval(t);
   }, [finished, index, questions]);
+
+  useEffect(() => {
+    if (!finished && seconds >= limit) submitRef.current();
+  }, [seconds, limit, finished]);
 
   const submit = () => {
     recordAttempt({
