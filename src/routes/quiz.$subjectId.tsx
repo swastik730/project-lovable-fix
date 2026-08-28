@@ -240,6 +240,7 @@ function QuizRunner({
     }
     setFinished(true);
   };
+  submitRef.current = submit;
 
   if (finished) {
     return (
