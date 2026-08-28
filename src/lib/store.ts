@@ -172,21 +172,34 @@ function bumpStreak(s: AppState): Pick<AppState, "streak" | "lastStudyDate"> {
 
 export function recordAttempt(attempt: Omit<Attempt, "id" | "date">) {
   const full: Attempt = { ...attempt, id: crypto.randomUUID(), date: new Date().toISOString() };
-  // A chapter counts as covered once the student has practised it and got at
-  // least half of the questions right — there is no manual tick button.
+  // Hard mode: a chapter is only "covered" after repeated, high-accuracy
+  // practice — HARD.masteryAttempts separate sessions, at least
+  // HARD.masteryMinQuestions questions and HARD.masteryAccuracy accuracy.
   const chapterId = attempt.chapterId;
+  const history = chapterId ? [full, ...state.attempts].filter((a) => a.chapterId === chapterId) : [];
+  const totals = history.reduce(
+    (acc, a) => ({ total: acc.total + a.total, correct: acc.correct + a.correct }),
+    { total: 0, correct: 0 },
+  );
   const earnsChapter =
     !!chapterId &&
-    attempt.total > 0 &&
-    attempt.correct * 2 >= attempt.total &&
+    history.length >= HARD.masteryAttempts &&
+    totals.total >= HARD.masteryMinQuestions &&
+    totals.correct >= totals.total * HARD.masteryAccuracy &&
     !state.completedChapters.includes(chapterId);
+
+  // XP is earned, not gifted: wrong answers cost XP, and the completion bonus
+  // only lands when the paper clears the strict pass line.
+  const wrong = attempt.total - attempt.correct - attempt.unanswered;
+  const passed = attempt.total > 0 && attempt.correct >= attempt.total * (HARD.passPercent / 100);
+  const gained = Math.max(0, attempt.correct * 10 - wrong * 4 - attempt.unanswered * 2) + (passed ? 25 : 0);
 
   update((s) => {
     const today = todayKey();
     const sameDay = s.todayDate === today;
     return {
       attempts: [full, ...s.attempts].slice(0, 200),
-      xp: s.xp + attempt.correct * 10 + 5,
+      xp: s.xp + gained,
       todayDate: today,
       todayCount: (sameDay ? s.todayCount : 0) + attempt.total,
       completedChapters:
