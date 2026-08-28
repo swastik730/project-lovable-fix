@@ -275,7 +275,8 @@ function QuizRunner({
         answers={answers}
         marked={marked}
         bookmarks={state.bookmarks}
-        timerLabel={formatTime(seconds)}
+        timerLabel={formatTime(left)}
+        timeLow={left <= 60}
         submitLabel="Submit quiz"
         onIndexChange={setIndex}
         onSelect={(i) => setAnswers((a) => ({ ...a, [q.id]: i }))}
